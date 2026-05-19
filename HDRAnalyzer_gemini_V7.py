@@ -66,6 +66,21 @@ def plot_from_csv(csv_path):
         ax1.grid(True, alpha=0.2)
         ax1.legend(loc='upper right')
 
+        # --- 新增: 计算并添加四个亮度统计值 ---
+        max_cll = np.max(peak)
+        ave_cll = np.mean(peak)
+        max_fall = np.max(avg)
+        ave_fall = np.mean(avg)
+        
+        stats_text = (f"MaxCLL: {max_cll:.0f} nits\n"
+                      f"AveCLL: {ave_cll:.0f} nits\n"
+                      f"MaxFALL: {max_fall:.0f} nits\n"
+                      f"AveFALL: {ave_fall:.0f} nits")
+        
+        ax1.text(0.01, 0.04, stats_text, transform=ax1.transAxes,
+                 fontsize=10, verticalalignment='bottom',
+                 bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.8, edgecolor='#CCCCCC'))
+
         # 图 2: 色域占比
         ax2.stackplot(t, r709, rp3, r2020, colors=['#BBBBBB', '#F4D03F', '#E74C3C'], 
                       labels=['Rec.709', 'P3 (outside 709)', 'Rec.2020 (outside P3)'])
