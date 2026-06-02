@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Address code review findings: move frame processing to worker_threads, manage FFmpeg process lifecycle, fix gamut confidence-mask divergence, optimize buffer growth, and fix progress listener leak.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create electron-app/analysis/analysis-worker.js that uses worker_threads to run ffmpeg spawn and frame processing, posting progress and results back to the main thread",
     "Refactor electron-app/analysis/hdr-analyzer.js analyzeVideo to delegate to the worker, fix gamut confidence-mask threshold (sum > 0.01), and use pre-allocated buffer with write offset",
@@ -24,5 +24,5 @@
     "Run 'NODE_OPTIONS='' node --check electron-app/preload.js'"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 5 review issues addressed. Worker thread approach keeps the color science constants and processFrame function duplicated in analysis-worker.js (self-contained worker with no main-thread imports). The MIN_SUM_THRESHOLD constant (0.01) is exported from hdr-analyzer.js for testability. All files pass node --check syntax validation. INTEGRATIONS_ONLY network prevents runtime testing but structural correctness is verified."
 }
