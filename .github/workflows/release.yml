@@ -28,10 +28,9 @@ jobs:
         run: npm ci
 
       - name: Build (electron-builder)
-        run: npm run build
-        env:
-          # Never auto-publish; the release job handles uploads.
-          GH_TOKEN: ''
+        # --publish never: the separate release job handles uploads, so
+        # electron-builder must not try to auto-publish on tag refs.
+        run: npm run build -- --publish never
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
