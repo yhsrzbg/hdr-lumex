@@ -16,15 +16,13 @@ function loadAsset(name, devPath) {
 }
 
 /**
- * Generate a self-contained HTML report next to the analyzed video (or in cwd
- * if that is not writable). The chart is rendered in the user's browser using
- * the bundled chart-renderer source.
+ * Build the self-contained HTML report string for the given analysis data.
+ * The chart is rendered in the browser using the bundled chart-renderer source.
  *
  * @param {Object} analysisData - { results, totalDuration, filename }
- * @param {string} videoPath - original video path, used to place the report
- * @returns {string} path to the written HTML report
+ * @returns {string} the full HTML document
  */
-function generateReport(analysisData, videoPath) {
+function buildReportHtml(analysisData) {
   const template = loadAsset(
     'report-template.html',
     path.join(__dirname, 'report-template.html')
@@ -34,10 +32,22 @@ function generateReport(analysisData, videoPath) {
     path.join(__dirname, '..', 'assets', 'chart-renderer.js')
   );
 
-  const html = template
+  return template
     .replace('__CHART_RENDERER__', () => chartRenderer)
     .replace('__ANALYSIS_DATA__', () => JSON.stringify(analysisData))
     .replace('__FILENAME__', () => analysisData.filename || '');
+}
+
+/**
+ * Generate a self-contained HTML report next to the analyzed video (or in cwd
+ * if that is not writable).
+ *
+ * @param {Object} analysisData - { results, totalDuration, filename }
+ * @param {string} videoPath - original video path, used to place the report
+ * @returns {string} path to the written HTML report
+ */
+function generateReport(analysisData, videoPath) {
+  const html = buildReportHtml(analysisData);
 
   const base = (analysisData.filename || 'hdr-analysis').replace(/\.[^.]+$/, '');
   const outName = `${base}-hdr-report.html`;
@@ -54,4 +64,4 @@ function generateReport(analysisData, videoPath) {
   return outPath;
 }
 
-module.exports = { generateReport };
+module.exports = { generateReport, buildReportHtml };

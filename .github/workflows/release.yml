@@ -27,37 +27,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build single-file executable
+      - name: Build (electron-builder)
         run: npm run build
-
-      - name: Package (Windows)
-        if: matrix.os == 'windows-latest'
-        shell: bash
-        run: |
-          cd dist
-          7z a "HDR-Video-Analyzer-windows.zip" "HDR-Video-Analyzer.exe"
-
-      - name: Package (macOS)
-        if: matrix.os == 'macos-latest'
-        run: |
-          cp launchers/run-mac.command dist/
-          chmod +x dist/HDR-Video-Analyzer dist/run-mac.command
-          cd dist
-          zip -j "HDR-Video-Analyzer-macos.zip" "HDR-Video-Analyzer" "run-mac.command"
-
-      - name: Package (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          cp launchers/run-linux.sh dist/
-          chmod +x dist/HDR-Video-Analyzer dist/run-linux.sh
-          cd dist
-          zip -j "HDR-Video-Analyzer-linux.zip" "HDR-Video-Analyzer" "run-linux.sh"
+        env:
+          # Never auto-publish; the release job handles uploads.
+          GH_TOKEN: ''
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.os }}
-          path: dist/*.zip
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
 
   release:
     needs: [build]
@@ -82,4 +65,6 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            artifacts/**/*.zip
+            artifacts/**/*.exe
+            artifacts/**/*.dmg
+            artifacts/**/*.AppImage

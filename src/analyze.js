@@ -182,15 +182,19 @@ function getVideoDuration(videoPath, ffprobePath) {
  * frame inline, and reports progress through the onProgress callback.
  *
  * @param {string} videoPath
- * @param {Object} options - { useSubsample: boolean }
+ * @param {Object} options - { useSubsample, ffmpegPath, ffprobePath, signal }
  * @param {Function} onProgress - (percent, timeSeconds, peakNits) => void
  * @returns {Promise<{results, totalDuration, filename}>}
  */
 async function analyze(videoPath, options, onProgress) {
-  const { useSubsample = true } = options || {};
+  const { useSubsample = true, signal } = options || {};
 
-  const ffmpegPath = resolveFfmpegPath();
-  const ffprobePath = resolveFfprobePath();
+  if (signal && signal.aborted) {
+    throw new Error('已取消');
+  }
+
+  const ffmpegPath = (options && options.ffmpegPath) || resolveFfmpegPath();
+  const ffprobePath = (options && options.ffprobePath) || resolveFfprobePath();
 
   const totalDuration = await getVideoDuration(videoPath, ffprobePath);
 
@@ -213,8 +217,21 @@ async function analyze(videoPath, options, onProgress) {
   let frameIndex = 0;
   const frameBuffer = Buffer.allocUnsafe(frameBytes);
   let writeOffset = 0;
+  let aborted = false;
 
   await new Promise((resolve, reject) => {
+    const onAbort = () => {
+      aborted = true;
+      proc.kill('SIGKILL');
+    };
+    if (signal) {
+      if (signal.aborted) {
+        onAbort();
+      } else {
+        signal.addEventListener('abort', onAbort, { once: true });
+      }
+    }
+
     proc.stdout.on('data', (chunk) => {
       let chunkOffset = 0;
       while (chunkOffset < chunk.length) {
@@ -251,6 +268,11 @@ async function analyze(videoPath, options, onProgress) {
     });
 
     proc.on('close', () => {
+      if (signal) signal.removeEventListener('abort', onAbort);
+      if (aborted) {
+        reject(new Error('已取消'));
+        return;
+      }
       if (results.length === 0) {
         reject(new Error('No frames were processed. Check that the file is a valid HDR video.'));
         return;
@@ -259,6 +281,7 @@ async function analyze(videoPath, options, onProgress) {
     });
 
     proc.on('error', (err) => {
+      if (signal) signal.removeEventListener('abort', onAbort);
       reject(new Error(`Failed to start ffmpeg: ${err.message}`));
     });
   });

@@ -1,14 +1,14 @@
 {
   "name": "hdr-video-analyzer",
-  "version": "1.0.0",
-  "description": "Interactive CLI tool for HDR video analysis - analyzes brightness, color gamut, and APL, then generates an HTML report",
-  "main": "src/cli.js",
-  "bin": {
-    "hdr-video-analyzer": "src/cli.js"
-  },
+  "version": "1.0.2",
+  "description": "Desktop app for HDR video analysis - analyzes brightness, color gamut, and APL, then renders an interactive chart with PNG/HTML export",
+  "main": "main.js",
   "scripts": {
-    "start": "node src/cli.js",
-    "build": "node scripts/build-sea.cjs"
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
   },
   "author": "",
   "license": "MIT",
@@ -17,7 +17,67 @@
     "ffprobe-static": "^3.1.0"
   },
   "devDependencies": {
-    "esbuild": "^0.24.0",
-    "postject": "^1.0.0-alpha.6"
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.hdr-analyzer.app",
+    "productName": "HDR Video Analyzer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "assets/**/*",
+      "src/**/*",
+      "!**/node_modules/ffmpeg-static/ffmpeg*",
+      "!**/node_modules/ffprobe-static/bin/**"
+    ],
+    "win": {
+      "target": "portable",
+      "extraResources": [
+        {
+          "from": "node_modules/ffmpeg-static/ffmpeg.exe",
+          "to": "ffmpeg.exe"
+        },
+        {
+          "from": "node_modules/ffprobe-static/bin/win32/x64/ffprobe.exe",
+          "to": "ffprobe.exe"
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "HDR-Video-Analyzer-${os}.${ext}"
+    },
+    "mac": {
+      "target": "dmg",
+      "extraResources": [
+        {
+          "from": "node_modules/ffmpeg-static/ffmpeg",
+          "to": "ffmpeg"
+        },
+        {
+          "from": "node_modules/ffprobe-static/bin/darwin/x64/ffprobe",
+          "to": "ffprobe"
+        }
+      ]
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "AudioVideo",
+      "extraResources": [
+        {
+          "from": "node_modules/ffmpeg-static/ffmpeg",
+          "to": "ffmpeg"
+        },
+        {
+          "from": "node_modules/ffprobe-static/bin/linux/x64/ffprobe",
+          "to": "ffprobe"
+        }
+      ]
+    }
   }
 }

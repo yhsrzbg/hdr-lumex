@@ -1,68 +1,52 @@
 # HDR Video Analyzer
 
-An interactive command-line tool for analyzing HDR video files. It decodes video frames using FFmpeg, performs PQ EOTF conversion, calculates brightness and color gamut classification, and generates a self-contained HTML report with a 3-panel chart.
+A desktop app for analyzing HDR video files. Drop in a video (or click to choose one) and it decodes frames with FFmpeg, performs PQ EOTF conversion, classifies brightness and color gamut, and renders an interactive 3-panel chart right in the window — no browser, no command line.
 
-Double-click to launch — a terminal opens with a numbered menu. No installation step, no Node.js required (the released builds are single executables with FFmpeg bundled in).
+No installation step. The released builds are portable: download, unzip, and run. FFmpeg is bundled inside.
 
 ## Features
 
-- **Brightness Analysis**: Peak and average brightness over time (displayed in PQ/nits scale)
+- **Single-window flow**: drop or pick a file → live progress with a cancel button → results in the same window
+- **Brightness Analysis**: Peak and average brightness over time (PQ/nits scale)
 - **Color Gamut Classification**: Frame-by-frame breakdown of Rec.709, DCI-P3, and Rec.2020 content
-- **APL Histogram**: Average Picture Level distribution across all analyzed frames
+- **APL Histogram**: Average Picture Level distribution across analyzed frames
 - **Statistics**: MaxCLL, AveCLL, MaxFALL, AveFALL, Average APL, Median APL
-- **HTML report**: Opens in your browser; export the chart as a PNG with one click
+- **Export**: save the chart as PNG, or a self-contained HTML report, from the results screen
 
 ## Download & Run (end users)
 
-Grab the zip for your platform from the [Releases](../../releases) page:
+Grab the file for your platform from the [Releases](../../releases) page:
 
-- **Windows**: unzip and double-click `HDR-Video-Analyzer.exe`. A console window opens with the menu.
-- **macOS**: unzip and double-click `run-mac.command` (opens in Terminal). First launch may be blocked by Gatekeeper — right-click → Open, or run `xattr -d com.apple.quarantine HDR-Video-Analyzer`.
-- **Linux**: unzip and run `./run-linux.sh` from a terminal (or mark it executable and "Run in Terminal" from your file manager).
+- **Windows**: download `HDR-Video-Analyzer-win.exe` and double-click it. It runs directly — no installer.
+- **macOS**: download the `.dmg`, open it, drag the app to Applications (or run it from the mounted disk). First launch may be blocked by Gatekeeper — right-click → Open.
+- **Linux**: download the `.AppImage`, mark it executable (`chmod +x`), and run it.
 
-Then choose **1** to analyze a video, paste or drag in the file path, and the tool writes an HTML report next to it.
+Then drag a video onto the window or click to choose one. Analysis starts immediately. Supported formats: MKV, MP4, MOV, TS.
 
-## Usage (menu)
+## Usage
 
-```
-==============================
-     HDR Video Analyzer
-==============================
-
-  1) 分析视频文件
-  2) 关于 / 帮助
-  0) 退出
-```
-
-You can also run it non-interactively by passing a video path as an argument:
-
-```bash
-HDR-Video-Analyzer /path/to/video.mkv
-```
-
-Supported formats: MKV, MP4, MOV, TS.
+1. Launch the app.
+2. Drag a video file onto the window, or click the drop zone to open a file picker.
+3. Watch the progress bar; press **取消分析** (Cancel) to stop.
+4. When analysis finishes, the chart appears. Use **← 返回** (top-left) to analyze another file, or **保存 PNG / 保存 HTML** (top-right) to export.
 
 ## Development
 
 ```bash
 # Node.js 18+ (CI builds with 22)
 npm install
-npm start          # run the CLI from source
-npm run build      # build the single-file executable into dist/
+npm start          # launch the Electron app from source
+npm run build      # build the portable executable into dist/
 ```
 
-`npm run build` uses esbuild to bundle the CLI, then Node's Single Executable Application (SEA) API plus postject to produce one binary with FFmpeg, FFprobe, and the chart renderer embedded as assets. SEA cannot cross-compile, so each platform's binary is built on its own CI runner (see `.github/workflows/release.yml`).
+`npm run build` uses electron-builder. It bundles the app and copies the platform's FFmpeg/FFprobe binaries into the app's resources. electron-builder cannot cross-compile, so each platform's binary is built on its own CI runner (see `.github/workflows/release.yml`, triggered by pushing a `v*` tag).
 
 ## How It Works
 
 1. **FFprobe** extracts the video duration
 2. **FFmpeg** decodes the video at 1 fps to raw 10-bit planar format (gbrp10le), padded to 3840x2160
 3. Per-pixel analysis: PQ EOTF (ST 2084) → linear light → Rec.2020 luminance → CIE xy chromaticity for gamut classification
-4. Results are written into an HTML report; the chart is drawn in the browser via the Canvas 2D API (no native canvas dependency)
-
-## Size note
-
-The released executable is ~170–190 MB. Most of that is the bundled FFmpeg/FFprobe (~130 MB) plus the Node runtime. To shrink it dramatically (~40 MB), switch `src/ffmpeg-paths.js` to download FFmpeg on first run instead of embedding it — the analysis code does not change.
+4. Results are drawn into a `<canvas>` in the window via the Canvas 2D API (no native canvas dependency). The same renderer produces the exported HTML report.
 
 ## License
 
