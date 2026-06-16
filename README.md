@@ -1,6 +1,8 @@
-# HDR Video Analyzer - Electron App
+# HDR Video Analyzer
 
-A desktop application for analyzing HDR video files. It decodes video frames using FFmpeg, performs PQ EOTF conversion, calculates brightness and color gamut classification, and generates a detailed 3-panel analysis chart.
+An interactive command-line tool for analyzing HDR video files. It decodes video frames using FFmpeg, performs PQ EOTF conversion, calculates brightness and color gamut classification, and generates a self-contained HTML report with a 3-panel chart.
+
+Double-click to launch — a terminal opens with a numbered menu. No installation step, no Node.js required (the released builds are single executables with FFmpeg bundled in).
 
 ## Features
 
@@ -8,70 +10,59 @@ A desktop application for analyzing HDR video files. It decodes video frames usi
 - **Color Gamut Classification**: Frame-by-frame breakdown of Rec.709, DCI-P3, and Rec.2020 content
 - **APL Histogram**: Average Picture Level distribution across all analyzed frames
 - **Statistics**: MaxCLL, AveCLL, MaxFALL, AveFALL, Average APL, Median APL
+- **HTML report**: Opens in your browser; export the chart as a PNG with one click
 
-## Prerequisites
+## Download & Run (end users)
 
-- Node.js 18+ (recommended: 20+)
-- npm 9+
+Grab the zip for your platform from the [Releases](../../releases) page:
 
-FFmpeg is bundled automatically via `ffmpeg-static` - no separate installation needed.
+- **Windows**: unzip and double-click `HDR-Video-Analyzer.exe`. A console window opens with the menu.
+- **macOS**: unzip and double-click `run-mac.command` (opens in Terminal). First launch may be blocked by Gatekeeper — right-click → Open, or run `xattr -d com.apple.quarantine HDR-Video-Analyzer`.
+- **Linux**: unzip and run `./run-linux.sh` from a terminal (or mark it executable and "Run in Terminal" from your file manager).
 
-## Setup
+Then choose **1** to analyze a video, paste or drag in the file path, and the tool writes an HTML report next to it.
 
-```bash
-# Install dependencies
-npm install
+## Usage (menu)
 
-# Start the application
-npm start
+```
+==============================
+     HDR Video Analyzer
+==============================
+
+  1) 分析视频文件
+  2) 关于 / 帮助
+  0) 退出
 ```
 
-## Usage
+You can also run it non-interactively by passing a video path as an argument:
 
-1. Click **"Select Video"** to choose an HDR video file (MKV, MP4, MOV, TS)
-2. Wait for the analysis to complete (progress is shown in the progress bar)
-3. View the generated 3-panel chart
-4. Click **"Save As"** to export the chart as a PNG image
+```bash
+HDR-Video-Analyzer /path/to/video.mkv
+```
+
+Supported formats: MKV, MP4, MOV, TS.
+
+## Development
+
+```bash
+# Node.js 18+ (CI builds with 22)
+npm install
+npm start          # run the CLI from source
+npm run build      # build the single-file executable into dist/
+```
+
+`npm run build` uses esbuild to bundle the CLI, then Node's Single Executable Application (SEA) API plus postject to produce one binary with FFmpeg, FFprobe, and the chart renderer embedded as assets. SEA cannot cross-compile, so each platform's binary is built on its own CI runner (see `.github/workflows/release.yml`).
 
 ## How It Works
 
-### Analysis Pipeline
-
 1. **FFprobe** extracts the video duration
-2. **FFmpeg** decodes the video at 1 fps to raw 10-bit planar format (gbrp10le)
-3. Each frame is padded to 3840x2160 (4K) resolution
-4. Per-pixel analysis:
-   - PQ EOTF (ST 2084) converts signal values to linear light
-   - Luminance is calculated using Rec.2020 coefficients
-   - CIE xy chromaticity is computed for gamut classification
-5. Results are aggregated and rendered as a chart
+2. **FFmpeg** decodes the video at 1 fps to raw 10-bit planar format (gbrp10le), padded to 3840x2160
+3. Per-pixel analysis: PQ EOTF (ST 2084) → linear light → Rec.2020 luminance → CIE xy chromaticity for gamut classification
+4. Results are written into an HTML report; the chart is drawn in the browser via the Canvas 2D API (no native canvas dependency)
 
-### Chart Panels
+## Size note
 
-1. **Brightness Over Time** - Y-axis in PQ space with nit labels (0 to 10000), showing peak (orange) and average (blue) brightness
-2. **Gamut Ratio** - Stacked area chart showing proportion of pixels in Rec.709 (gray), DCI-P3 (yellow), and Rec.2020 (red)
-3. **APL Histogram** - Distribution of Average Picture Level values across frames
-
-## Building for Distribution
-
-```bash
-# Build for current platform
-npm run build
-
-# Build for specific platform
-npm run build:win
-npm run build:mac
-npm run build:linux
-```
-
-Built packages will be output to the `dist/` directory.
-
-## Technical Details
-
-- Electron with context isolation and secure IPC
-- Analysis runs in the main process (CPU-intensive work)
-- Chart generation uses node-canvas (Canvas 2D API)
-- FFmpeg binary bundled via ffmpeg-static and electron-builder extraResources
+The released executable is ~170–190 MB. Most of that is the bundled FFmpeg/FFprobe (~130 MB) plus the Node runtime. To shrink it dramatically (~40 MB), switch `src/ffmpeg-paths.js` to download FFmpeg on first run instead of embedding it — the analysis code does not change.
 
 ## License
 

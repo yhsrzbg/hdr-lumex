@@ -1,14 +1,14 @@
 {
   "name": "hdr-video-analyzer",
   "version": "1.0.0",
-  "description": "Electron desktop app for HDR video analysis - analyzes brightness, color gamut, and APL",
-  "main": "main.js",
+  "description": "Interactive CLI tool for HDR video analysis - analyzes brightness, color gamut, and APL, then generates an HTML report",
+  "main": "src/cli.js",
+  "bin": {
+    "hdr-video-analyzer": "src/cli.js"
+  },
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "start": "node src/cli.js",
+    "build": "node scripts/build-sea.cjs"
   },
   "author": "",
   "license": "MIT",
@@ -17,58 +17,7 @@
     "ffprobe-static": "^3.1.0"
   },
   "devDependencies": {
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1"
-  },
-  "build": {
-    "appId": "com.hdr-analyzer.app",
-    "productName": "HDR Video Analyzer",
-    "files": [
-      "**/*",
-      "!node_modules/ffmpeg-static/ffmpeg",
-      "!node_modules/ffmpeg-static/ffmpeg.exe"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": null,
-      "extraResources": [
-        {
-          "from": "node_modules/ffmpeg-static/ffmpeg.exe",
-          "to": "ffmpeg.exe"
-        },
-        {
-          "from": "node_modules/ffprobe-static/bin/win32/x64/ffprobe.exe",
-          "to": "ffprobe.exe"
-        }
-      ]
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": null,
-      "extraResources": [
-        {
-          "from": "node_modules/ffmpeg-static/ffmpeg",
-          "to": "ffmpeg"
-        },
-        {
-          "from": "node_modules/ffprobe-static/bin/darwin/x64/ffprobe",
-          "to": "ffprobe"
-        }
-      ]
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": null,
-      "extraResources": [
-        {
-          "from": "node_modules/ffmpeg-static/ffmpeg",
-          "to": "ffmpeg"
-        },
-        {
-          "from": "node_modules/ffprobe-static/bin/linux/x64/ffprobe",
-          "to": "ffprobe"
-        }
-      ]
-    }
+    "esbuild": "^0.24.0",
+    "postject": "^1.0.0-alpha.6"
   }
 }
