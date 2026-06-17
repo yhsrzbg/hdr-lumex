@@ -15,7 +15,7 @@ let activeAbort = null;
 /**
  * Resolve bundled ffmpeg/ffprobe paths. When packaged, electron-builder copies
  * the binaries into resources/ (see package.json build.extraResources); in dev
- * we fall back to the ffmpeg-static/ffprobe-static packages via analyze().
+ * we fall back to the ffmpeg-static/@derhuerst/ffprobe-static packages via analyze().
  */
 function resolveBinaries() {
   if (!app.isPackaged) return {};

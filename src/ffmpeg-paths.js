@@ -62,7 +62,7 @@ function resolveFfprobePath() {
     return extractSeaAsset('ffprobe', 'ffprobe');
   }
   try {
-    return require('ffprobe-static').path;
+    return require('@derhuerst/ffprobe-static');
   } catch {
     return 'ffprobe';
   }
