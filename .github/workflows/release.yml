@@ -8,6 +8,12 @@ on:
   # release job requires a tag ref (startsWith(github.ref, 'refs/tags/')).
   workflow_dispatch:
 
+# Run the JS-based actions on their Node 24 runtime to silence the Node 20
+# deprecation warning. This only affects the actions' own runtime, not the
+# Node used to build the app (see setup-node below).
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   build:
     strategy:
